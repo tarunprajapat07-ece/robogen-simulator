@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>ROBOGEN – Warehouse Robot Simulator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8eaea;--pn:#fff;--ink:#1d2733;--mu:#5d6a77;--ln:#cfd5d9;--ac:#f2a900;--bl:#2f6fdb;--gr:#2e9e5b;--rd:#d64545;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151b22;--pn:#1e2630;--ink:#e8edf1;--mu:#93a1ae;--ln:#2f3a46}}
+:root[data-theme="dark"]{--bg:#151b22;--pn:#1e2630;--ink:#e8edf1;--mu:#93a1ae;--ln:#2f3a46}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 'IBM Plex Sans',system-ui,sans-serif}
+h1,h2,h3{font-family:'Barlow Condensed','Arial Narrow',sans-serif;line-height:1.05;margin:0}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:var(--pn);border-bottom:3px solid var(--ac)}
+.brand{font:700 24px 'Barlow Condensed',sans-serif;letter-spacing:.04em}nav a{color:var(--mu);text-decoration:none;margin-left:16px;font-weight:500}
+.w{max-width:1200px;margin:0 auto;padding:0 16px}
+.hero{padding:44px 0 28px}.hero h1{font-size:clamp(36px,7vw,68px);max-width:15ch}.hero p{max-width:60ch;color:var(--mu);font-size:17px}
+.b{border:1px solid var(--ln);background:var(--pn);color:var(--ink);padding:8px 12px;border-radius:6px;font:600 13px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.b:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid var(--bl);outline-offset:2px}
+.b.on{background:var(--ink);color:var(--pn)}.b.p{background:var(--ac);color:#1d2733;border-color:var(--ac)}.b.d{background:var(--rd);color:#fff;border-color:var(--rd)}
+.sim{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:960px){.sim{grid-template-columns:minmax(0,1.75fr) minmax(320px,1fr)}}
+.card{background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:14px}
+.card h3{font-size:21px;margin-bottom:10px}
+canvas{width:100%;height:auto;display:block;border-radius:6px;touch-action:none;cursor:crosshair;background:#d5d8d6}
+.tb{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}.tb label{font-size:13px;color:var(--mu)}
+.hint{font-size:13px;color:var(--mu);margin:8px 0 0}
+.st{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pill{padding:3px 12px;border-radius:99px;font:700 14px 'Barlow Condensed',sans-serif;letter-spacing:.05em;background:var(--gr);color:#fff}
+.bar{height:10px;background:var(--ln);border-radius:5px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:var(--gr);transition:width .2s}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:8px}.kv div{font-size:13px;color:var(--mu)}.kv b{display:block;color:var(--ink);font-size:15px}
+.pipe{display:flex;flex-wrap:wrap;gap:6px}.pipe span{padding:4px 10px;border:1px solid var(--ln);border-radius:5px;font-size:13px;font-weight:600;color:var(--mu)}.pipe span.a{background:var(--ac);color:#1d2733;border-color:var(--ac)}
+.frm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.frm label{font-size:12px;color:var(--mu)}select{width:100%;padding:7px;border:1px solid var(--ln);border-radius:6px;background:var(--pn);color:var(--ink);font:inherit}
+.log{font:12px/1.6 ui-monospace,Menlo,monospace;color:var(--mu);margin:0;padding:0;list-style:none;min-height:88px}
+.col{display:grid;gap:16px;align-content:start}
+section.s{padding:44px 0}.s h2{font-size:clamp(28px,4vw,40px);margin-bottom:16px}
+.steps{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.steps .card b{font:700 22px 'Barlow Condensed',sans-serif;color:var(--bl)}
+.two{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}.two ul{margin:0;padding-left:18px}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:8px}
+footer{padding:28px 16px;text-align:center;color:var(--mu);font-size:13px;border-top:1px solid var(--ln)}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.bar i{transition:none}}
+</style></head><body>
+<header><div class="brand">ROBOGEN</div><nav><a href="#sim">Simulator</a><a href="#how">How it works</a><a href="#arch">Architecture</a></nav></header>
+<main>
+<div class="w hero"><h1>Pick. Navigate. Avoid. Transport. Place.</h1>
+<p>A virtual model of the ROBOGEN autonomous warehouse robot. Drag obstacles anywhere, click a cell or create an order, and the robot plans and re-plans its own route.</p>
+<button class="b p" onclick="document.getElementById('sim').scrollIntoView()">Open simulator</button></div>
+<div class="w" id="sim"><div class="sim">
+<div class="card"><canvas id="cv" tabindex="0" aria-label="Warehouse simulation map"></canvas>
+<div class="tb">
+<button class="b on" data-t="go">Move / Go-to</button><button class="b" data-t="add">Add obstacle</button><button class="b" data-t="erase">Erase</button>
+<button class="b on" id="tp">Route</button><button class="b on" id="tl">LiDAR</button>
+<button class="b" id="rnd">Random obstacles</button><button class="b" id="clr">Clear</button>
+<label>Speed <input type="range" id="sp" min="0.5" max="3" step="0.5" value="1"></label></div>
+<p class="hint">Drag a crate to move it, even while the robot drives. In Move / Go-to mode, click any free cell to send the robot there.</p></div>
+<div class="col">
+<div class="card"><div class="st"><h3>Robot dashboard</h3><span class="pill" id="pill">IDLE</span></div>
+<div class="kv" id="info"></div><div class="bar"><i id="bat"></i></div><div class="pipe" id="pipe"></div><div class="kv" id="tele"></div></div>
+<div class="card"><h3>Warehouse orders</h3>
+<div class="frm"><div><label>Pickup</label><select id="op"><option>A1</option><option>A2</option><option>A3</option></select></div>
+<div><label>Destination</label><select id="od"><option>B1</option><option>B2</option><option>B3</option><option selected>B4</option></select></div>
+<div><label>Payload</label><select id="ol"><option>Box</option><option>Tote</option><option>Pallet</option></select></div></div>
+<div class="tb"><button class="b p" id="cr">Create order</button><button class="b" id="go">Start</button><button class="b" id="pa">Pause</button><button class="b d" id="es">Emergency stop</button><button class="b" id="rs">Reset</button></div>
+<p class="hint" id="ql">No orders queued.</p></div>
+<div class="card"><h3>Event log</h3><ul class="log" id="log"></ul></div>
+</div></div></div>
+<section class="s" id="how"><div class="w"><h2>How ROBOGEN works</h2><div class="steps">
+<div class="card"><b>1. Order</b><p>The dashboard creates an order with a pickup, a destination and a payload, then assigns the robot.</p></div>
+<div class="card"><b>2. Navigate</b><p>The robot plans a route across the warehouse map and drives to the pickup point.</p></div>
+<div class="card"><b>3. Avoid</b><p>When an obstacle blocks the route, the robot stops and re-plans around it.</p></div>
+<div class="card"><b>4. Pick and transport</b><p>The arm picks the payload (home, move, grip, lift) and the robot carries it to the destination.</p></div>
+<div class="card"><b>5. Place</b><p>The arm places the payload, returns home, and the robot goes back to its dock.</p></div></div></div></section>
+<section class="s" id="arch"><div class="w"><h2>Prototype and final architecture</h2><div class="two">
+<div class="card"><span class="tag" style="background:var(--gr);color:#fff">Working prototype</span><ul><li>ESP32 / Arduino control with motor drivers</li><li>5-channel IR line following with PID steering</li><li>5-DOF DC-motor arm with limit switches</li><li>Demo: line follow, pick, transport, place, stop</li></ul></div>
+<div class="card"><span class="tag" style="background:var(--ac);color:#1d2733">Proposed final design</span><ul><li>Raspberry Pi with ROS 2, SLAM and path planning</li><li>LiDAR, camera, IMU and wheel encoders</li><li>Shared warehouse map for multi-robot coordination</li><li>Detection range and arm accuracy to be measured experimentally</li></ul></div></div>
+<p class="hint">This simulator is a virtual model. The LiDAR view and A* planner illustrate the proposed navigation design; they are not measurements from the physical prototype.</p></div></section>
+</main><footer>ROBOGEN · Smart Autonomous Warehouse Robot · SIH26112</footer>
+<script>
+const $=i=>document.getElementById(i),W=24,H=16,C=30,cv=$('cv'),g=cv.getContext('2d');cv.width=W*C;cv.height=H*C;
+const PK={A1:[2,3],A2:[2,8],A3:[2,12]},DS={B1:[21,2],B2:[21,6],B3:[21,10],B4:[21,13]},DOCK=[1,14];
+const marks=[...Object.values(PK),...Object.values(DS),DOCK],key=(c,r)=>c+','+r,obs=new Set();
+const init=()=>{obs.clear();[[8,4],[8,5],[8,6],[12,9],[12,10],[12,11],[16,3],[16,4],[15,13],[10,13],[5,7],[18,8]].forEach(p=>obs.add(key(...p)))};init();
+const isMark=(c,r)=>marks.some(m=>m[0]==c&&m[1]==r),free=(c,r)=>c>=0&&r>=0&&c<W&&r<H&&!obs.has(key(c,r));
+const mk=()=>({x:DOCK[0],y:DOCK[1],a:0,path:[],pi:0,state:'IDLE',goal:null,next:null,carry:false,bat:100,ext:0,seq:[],si:0,sT:0,wait:0,avoid:0,dist:0,rep:0,done:0,task:null,idle:0,lid:[],minD:6});
+let R=mk(),q=[],running=false,paused=false,estop=false,tool='go',showP=true,showL=true,spd=1,tid=0,drag=null,down=null,logs=[],T=0,retry=0;
+function log(m){const s=Math.floor(T);logs.unshift(String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')+'  '+m);logs.length=Math.min(logs.length,7);$('log').innerHTML=logs.map(l=>'<li>'+l+'</li>').join('')}
+function astar(s,e){const id=(c,r)=>r*W+c,G=new Map([[id(...s),0]]),F=new Map([[id(...s),0]]),pv=new Map(),cl=new Set(),op=[s],h=(c,r)=>Math.hypot(c-e[0],r-e[1]);
+while(op.length){let b=0;for(let i=1;i<op.length;i++)if(F.get(id(...op[i]))<F.get(id(...op[b])))b=i;
+const[c,r]=op.splice(b,1)[0];if(c==e[0]&&r==e[1]){const p=[[c,r]];let t=id(c,r);while(pv.has(t)){const u=pv.get(t);p.unshift(u);t=id(...u)}return p}
+cl.add(id(c,r));
+for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){if(!dx&&!dy)continue;const nc=c+dx,nr=r+dy,n=id(nc,nr);
+if(!free(nc,nr)||cl.has(n)||(dx&&dy&&(!free(c+dx,r)||!free(c,r+dy))))continue;
+const t=G.get(id(c,r))+Math.hypot(dx,dy);if(!G.has(n)||t<G.get(n)){G.set(n,t);F.set(n,t+h(nc,nr));pv.set(n,[c,r]);if(!op.some(o=>o[0]==nc&&o[1]==nr))op.push([nc,nr])}}}
+return null}
+const cellOf=()=>[Math.round(R.x),Math.round(R.y)];
+function plan(goal,st){R.goal=goal;const p=astar(cellOf(),goal);if(!p){R.path=[];R.next=st;R.state='BLOCKED';log('No route found, waiting for a clear path');return false}R.path=p;R.pi=1;R.state=st;return true}
+function arrive(){const s=R.state,t=R.task;
+if(s=='GOTO'){R.state='IDLE';R.idle=0;log('Reached target cell')}
+else if(s=='TO_PICKUP'){R.state='PICKING';R.seq=['Arm home','Move to object','Grip object','Lift'];R.si=0;R.sT=0;log('At pickup '+t.from+', picking '+t.payload.toLowerCase())}
+else if(s=='TRANSPORT'){R.state='PLACING';R.seq=['Move to destination','Release object','Arm home'];R.si=0;R.sT=0;log('At destination '+t.to+', placing')}
+else if(s=='RETURN'){R.state='IDLE';R.idle=0;log('Docked, charging')}}
+function pose(){const p=R.state=='PICKING',s=R.seq[R.si],f=Math.min(1,R.sT/.9);
+R.ext=p?[0,f,1,1-.6*f][R.si]:R.state=='PLACING'?[f,1,1-f][R.si]:R.carry?.3:0}
+function update(dt){T+=dt;R.avoid=Math.max(0,R.avoid-dt);const atDock=cellOf()[0]==DOCK[0]&&cellOf()[1]==DOCK[1];
+if(R.state=='IDLE'&&atDock)R.bat=Math.min(100,R.bat+5*dt);
+if(estop||paused)return;dt*=spd;
+if(R.state=='IDLE'){R.idle+=dt;
+if(running&&q.length&&R.bat>=20){R.task=q.shift();log('Order #'+R.task.id+' started: '+R.task.from+' to '+R.task.to);plan(PK[R.task.from],'TO_PICKUP');ui()}
+else if(!atDock&&(R.idle>3||R.bat<20)){log(R.bat<20?'Low battery, returning to dock':'Returning to dock');plan(DOCK,'RETURN')}}
+else if(R.state=='BLOCKED'){retry+=dt;if(retry>1){retry=0;plan(R.goal,R.next)}}
+else if(R.state=='PICKING'||R.state=='PLACING'){R.sT+=dt;pose();
+if(R.sT>=.9){R.sT=0;R.si++;R.bat-=.4;if(R.si>=R.seq.length){if(R.state=='PICKING'){R.carry=true;log('Payload gripped, transporting');plan(DS[R.task.to],'TRANSPORT')}else{R.carry=false;R.dlv.push(R.task.to);R.done++;log('Order #'+R.task.id+' delivered');R.task=null;R.state='IDLE';R.idle=0}R.ext=R.carry?.3:0}}}
+else{for(let i=R.pi;i<R.path.length;i++)if(!free(...R.path[i])){R.avoid=1.4;R.rep++;R.wait=.5;log('Obstacle on route, re-planning');plan(R.goal,R.state);break}
+if(R.wait>0){R.wait-=dt;return}
+const t=R.path[R.pi];if(!t)return;const dx=t[0]-R.x,dy=t[1]-R.y,d=Math.hypot(dx,dy),st=2.6*dt;
+let da=Math.atan2(dy,dx)-R.a;da=Math.atan2(Math.sin(da),Math.cos(da));R.a+=da*Math.min(1,dt*10);
+if(Math.abs(da)>.9&&d>.05)return;
+if(d<=st){R.x=t[0];R.y=t[1];R.pi++;R.dist+=d;R.bat-=d*.12;if(R.pi>=R.path.length){R.path=[];arrive()}}else{R.x+=dx/d*st;R.y+=dy/d*st;R.dist+=st;R.bat-=st*.12}}
+if(R.bat<=0){R.bat=0;paused=true;log('Battery empty, robot stopped')}}
+function lidar(){R.lid=[];R.minD=6;for(let k=0;k<48;k++){const a=k/48*Math.PI*2;let d=0;for(;d<6;d+=.1){const c=Math.round(R.x+Math.cos(a)*d),r=Math.round(R.y+Math.sin(a)*d);if(!free(c,r)&&!(c==Math.round(R.x)&&r==Math.round(R.y)))break}R.lid.push([a,d]);if(d<R.minD)R.minD=d}}
+const col=(m,c,t)=>{g.fillStyle=c+'44';g.fillRect(m[0]*C+2,m[1]*C+2,C-4,C-4);g.strokeStyle=c;g.lineWidth=2;g.strokeRect(m[0]*C+2,m[1]*C+2,C-4,C-4);g.fillStyle='#1d2733';g.font='bold 10px sans-serif';g.textAlign='center';g.fillText(t,m[0]*C+C/2,m[1]*C+C-5)};
+const crate=(c,r,s)=>{g.fillStyle='#b9822e';g.fillRect(c*C+s,r*C+s,C-2*s,C-2*s);g.strokeStyle='#6b4a18';g.lineWidth=1.5;g.strokeRect(c*C+s,r*C+s,C-2*s,C-2*s)};
+function draw(){g.fillStyle='#d5d8d6';g.fillRect(0,0,W*C,H*C);g.strokeStyle='rgba(0,0,0,.07)';g.lineWidth=1;g.beginPath();
+for(let i=0;i<=W;i++){g.moveTo(i*C,0);g.lineTo(i*C,H*C)}for(let j=0;j<=H;j++){g.moveTo(0,j*C);g.lineTo(W*C,j*C)}g.stroke();
+for(const n in PK)col(PK[n],'#f2a900',n);for(const n in DS)col(DS[n],'#2f6fdb',n);col(DOCK,'#2e9e5b','DOCK');
+const pend=q.map(t=>t.from);if(R.task&&!R.carry&&['TO_PICKUP','PICKING'].includes(R.state))pend.push(R.task.from);
+pend.forEach(n=>crate(PK[n][0],PK[n][1],9));R.dlv.forEach(n=>crate(DS[n][0],DS[n][1],9));
+obs.forEach(k=>{const[c,r]=k.split(',').map(Number);g.fillStyle='#3b4654';g.fillRect(c*C+3,r*C+3,C-6,C-6);g.strokeStyle='#f2a900';g.lineWidth=2;g.beginPath();g.moveTo(c*C+6,r*C+6);g.lineTo(c*C+C-6,r*C+C-6);g.moveTo(c*C+C-6,r*C+6);g.lineTo(c*C+6,r*C+C-6);g.stroke()});
+const px=R.x*C+C/2,py=R.y*C+C/2;
+if(showL){lidar();R.lid.forEach(([a,d])=>{g.strokeStyle='rgba(46,158,91,.35)';g.lineWidth=1;g.beginPath();g.moveTo(px,py);g.lineTo(px+Math.cos(a)*d*C,py+Math.sin(a)*d*C);g.stroke();if(d<6){g.fillStyle='#d64545';g.fillRect(px+Math.cos(a)*d*C-1.5,py+Math.sin(a)*d*C-1.5,3,3)}})}
+if(showP&&R.path.length>R.pi-1&&R.goal){g.setLineDash([6,5]);g.strokeStyle='#2f6fdb';g.lineWidth=2.5;g.beginPath();g.moveTo(px,py);for(let i=R.pi;i<R.path.length;i++)g.lineTo(R.path[i][0]*C+C/2,R.path[i][1]*C+C/2);g.stroke();g.setLineDash([]);g.beginPath();g.arc(R.goal[0]*C+C/2,R.goal[1]*C+C/2,6,0,7);g.stroke()}
+g.save();g.translate(px,py);g.rotate(R.a);g.fillStyle='#1d2733';g.fillRect(-10,-14,20,5);g.fillRect(-10,9,20,5);
+g.fillStyle=estop?'#d64545':'#f2a900';g.strokeStyle='#1d2733';g.lineWidth=2;g.fillRect(-11,-9,22,18);g.strokeRect(-11,-9,22,18);g.fillStyle='#fff';g.fillRect(7,-3,3,6);
+g.strokeStyle='#1d2733';g.lineWidth=3;g.beginPath();g.moveTo(0,0);g.lineTo(R.ext*15,0);g.stroke();g.fillStyle='#1d2733';g.beginPath();g.arc(0,0,4,0,7);g.fill();
+g.fillStyle=R.carry?'#2e9e5b':'#fff';g.beginPath();g.arc(R.ext*15,0,3.5,0,7);g.fill();g.stroke();if(R.carry){g.fillStyle='#b9822e';g.fillRect(R.ext*15-4,-4,8,8)}g.restore()}
+const nm=([c,r])=>{for(const n in PK)if(PK[n][0]==c&&PK[n][1]==r)return n;for(const n in DS)if(DS[n][0]==c&&DS[n][1]==r)return n;return c==DOCK[0]&&r==DOCK[1]?'Dock':'('+c+', '+r+')'};
+const pipeMap={TO_PICKUP:1,GOTO:1,PICKING:0,TRANSPORT:3,PLACING:4,RETURN:1};
+function ui(){const s=estop?'E-STOP':paused?'PAUSED':R.avoid>0?'AVOIDING':R.state;$('pill').textContent=s;$('pill').style.background=estop?'var(--rd)':R.avoid>0||paused?'var(--ac)':'var(--gr)';$('pill').style.color=R.avoid>0||paused?'#1d2733':'#fff';
+const b=Math.round(R.bat);$('bat').style.width=b+'%';$('bat').style.background=b<25?'var(--rd)':'var(--gr)';
+$('info').innerHTML=[['Robot ID','Robot-01'],['Battery',b+'%'+(b<25?' (low)':'')],['Current task',R.task?'#'+R.task.id+' '+R.task.from+' to '+R.task.to+' · '+R.task.payload:'None'],['Location',nm(cellOf())],['Destination',R.goal&&R.state!='IDLE'?nm(R.goal):'None'],['Connection','Online (simulated)']].map(a=>'<div>'+a[0]+'<b>'+a[1]+'</b></div>').join('');
+const act=new Set();if(R.avoid>0)act.add(2);if(!estop&&pipeMap[R.state]!=null&&R.task)act.add(pipeMap[R.state]);
+$('pipe').innerHTML=['Pick','Navigate','Avoid','Transport','Place'].map((n,i)=>'<span class="'+(act.has(i)?'a':'')+'">'+n+'</span>').join('');
+const arm=R.seq.length&&['PICKING','PLACING'].includes(R.state)?R.seq[R.si]:'Idle';
+$('tele').innerHTML=[['Arm step',arm],['Heading',Math.round((R.a*180/Math.PI+360)%360)+'°'],['Distance',R.dist.toFixed(0)+' cells'],['Re-plans',R.rep],['Orders done',R.done],['Nearest obstacle',R.minD>=6?'Clear':R.minD.toFixed(1)+' cells']].map(a=>'<div>'+a[0]+'<b>'+a[1]+'</b></div>').join('');
+$('ql').textContent=q.length?'Queued: '+q.map(t=>'#'+t.id+' '+t.from+' to '+t.to).join(', ')+(running?'':' (press Start)'):'No orders queued.'}
+const cellE=e=>{const b=cv.getBoundingClientRect();return[Math.floor((e.clientX-b.left)/b.width*W),Math.floor((e.clientY-b.top)/b.height*H)]};
+const nearR=(c,r)=>Math.abs(R.x-c)<1&&Math.abs(R.y-r)<1;
+cv.onpointerdown=e=>{const[c,r]=cellE(e);cv.setPointerCapture(e.pointerId);if(obs.has(key(c,r))&&tool!='add'){if(tool=='erase'){obs.delete(key(c,r));log('Obstacle removed')}else drag={c,r}}else down=[c,r]};
+cv.onpointermove=e=>{if(!drag)return;const[c,r]=cellE(e);if((c!=drag.c||r!=drag.r)&&free(c,r)&&!isMark(c,r)&&!nearR(c,r)){obs.delete(key(drag.c,drag.r));obs.add(key(c,r));drag.c=c;drag.r=r}};
+cv.onpointerup=e=>{if(drag){drag=null;log('Obstacle moved');return}const[c,r]=cellE(e);if(!down||down[0]!=c||down[1]!=r)return;down=null;
+if(tool=='add'){if(free(c,r)&&!isMark(c,r)&&!nearR(c,r)){obs.add(key(c,r));log('Obstacle added')}}
+else if(tool=='go'){if(!free(c,r))return;if(estop||paused)return log('Release pause or E-stop first');if(R.task||R.state!='IDLE'&&R.state!='GOTO'&&R.state!='RETURN')return log('Robot busy with an order');log('Go-to '+nm([c,r]));plan([c,r],'GOTO')}};
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tool=b.dataset.t;document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x==b))});
+const tog=(id,f)=>$(id).onclick=()=>$(id).classList.toggle('on',f());
+tog('tp',()=>showP=!showP);tog('tl',()=>showL=!showL);
+$('sp').oninput=e=>spd=+e.target.value;
+$('rnd').onclick=()=>{for(let n=0,i=0;n<5&&i<200;i++){const c=2+Math.floor(Math.random()*20),r=Math.floor(Math.random()*H);if(free(c,r)&&!isMark(c,r)&&!nearR(c,r)){obs.add(key(c,r));n++}}log('Random obstacles added')};
+$('clr').onclick=()=>{obs.clear();log('All obstacles cleared')};
+$('cr').onclick=()=>{q.push({id:++tid,from:$('op').value,to:$('od').value,payload:$('ol').value});log('Order #'+tid+' created: '+$('op').value+' to '+$('od').value);ui()};
+$('go').onclick=()=>{running=true;paused=false;log(q.length?'Task started':'Start pressed, no orders queued');ui()};
+$('pa').onclick=()=>{paused=!paused;$('pa').textContent=paused?'Resume':'Pause';ui()};
+$('es').onclick=()=>{estop=!estop;$('es').textContent=estop?'Release E-stop':'Emergency stop';log(estop?'EMERGENCY STOP engaged':'E-stop released');ui()};
+$('rs').onclick=()=>{R=mk();R.dlv=[];q=[];running=paused=estop=false;$('pa').textContent='Pause';$('es').textContent='Emergency stop';init();logs=[];log('Simulation reset');ui()};
+R.dlv=[];log('Robot-01 ready at dock');
+let last=performance.now(),uiT=0;
+function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;update(dt);draw();uiT+=dt;if(uiT>.12){uiT=0;ui()}requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+</script></body></html>
